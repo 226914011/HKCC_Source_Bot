@@ -202,7 +202,7 @@ while(True):
 		#print()
 
 	print()
-	print('Enter your number of data you want:')
+	print('Enter the number of data you want:')
 	x = int(input())
 
 	if x != 0:
