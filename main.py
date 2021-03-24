@@ -1,5 +1,5 @@
 import requests #import lib
-from secrets import username, password #import username and password
+from secret import username, password #import username and password
 
 #Preconfig
 headers = {
