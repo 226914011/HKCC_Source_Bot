@@ -10,6 +10,13 @@ Developing.
 ## Development Language
 * Python
 
+## Module Require
+* requests
+* browser_cookie3
+* bs4
+* os
+* base64
+
 ## How to use this bot
 1.Download all the files.<br>
 2.Replace your username and password inside secret.py.<br>
