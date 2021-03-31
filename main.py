@@ -136,27 +136,33 @@ def dec(x):
 #this is "/" in hex format
 chr = dec("2F")
 
+def rmunwrchr(stringfile):
+	#Check if unwritable characters are in filename
+	unwchar = [dec("5C") , dec("2F"),dec("3A"),dec("2A"),dec("3F"),dec("22"),dec("3C"),dec("3E"),dec("7C"),'.pdf', '.doc', '.docx','.mp4','.cpp', '.mp3']
+	matchs = [x for x in unwchar if x in stringfile]
+	if any(matchs):
+		for match in matchs:
+			buffer = ""
+			for name in stringfile.split(str(match)):
+				buffer += name
+			stringfile = buffer
+	return stringfile
+
+
 #get file in filtered link
 def getFiles(link,cjdict,classname,SAVE_PATH):
 	r = requests.get(url = link['href'], cookies=cjdict, allow_redirects=True)
 	if r.headers.get('content-type') is not None:
 		#class for filename
-		print(link.find("span",{"class":classname}))
+		#debug usage
+		#print(link.find("span",{"class":classname}))
 		if classname == "fp-filename":
 			filename_header = link.find("span",{"class":classname}).text
 		else:
 			filename_header = link.find("span",{"class":classname}).text[:-5]
-		
-		#Check if unwritable characters are in filename
-		unwchar = [dec("5C") , dec("2F"),dec("3A"),dec("2A"),dec("3F"),dec("22"),dec("3C"),dec("3E"),dec("7C"),'.pdf', '.doc', '.docx','.mp4','.cpp']
-		matchs = [x for x in unwchar if x in filename_header]
-		if any(matchs):
-			for match in matchs:
-				buffer = ""
-				for name in filename_header.split(str(match)):
-					buffer += name
-				filename_header = buffer
-		print(r.headers.get('content-disposition'))
+		filename_header = rmunwrchr(filename_header)
+		#debug usage
+		#print(r.headers.get('content-disposition'))
 		filename_type = "."+ r.headers.get('content-disposition').rsplit(".",1)[1][:-1]
 
 		filename = filename_header + filename_type
@@ -233,7 +239,8 @@ while(True):
 			links = file.find_all("a",href = True)
 			for link in links:
 				if link['href'].find("https://moodle.cpce-polyu.edu.hk/mod/resource/view.php?id=") == 0:
-					print(link)
+					#debug usage
+					#print(link)
 					mp4 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/mpeg-24"})
 					img1 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/png-24"})
 					img2 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/jpeg-24"})
@@ -253,44 +260,45 @@ while(True):
 						except:
 							print("An exception occurred")
 							print()
-
-
-
-	#Download Folder with link
+	
+	#Download Folder no needs to open link
 		for folder in folders:
-			withoutlink = folder.find_all("div",{"id":"folder_tree0"},{"class":"filemanager"})
+			withoutlink = folder.find_all("div",{"class":"contentwithoutlink"})
 			if withoutlink:
-				print(withoutlink[0])
-				print()
-				foldername = withoutlink[0].find("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/folder-24"}).title
+				#debug usage
+				#print(withoutlink[0])
+				#print()
+				foldername = rmunwrchr(withoutlink[0].find("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/folder-24"}).get('title'))
 				Folder_SAVE_PATH = SAVE_PATH + chr + foldername
 				CreateFolder(Folder_SAVE_PATH)
 
 				links = withoutlink[0].find_all("a",href = True)
 				for link in links:
 					if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
-						getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
-						
-	#Download Folder without link
+							getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
+
+	#Download Folder needs open link
 			else:
-				foldername = folder.find("span",{"class":"instancename"}).text[:-7]
-				Folder_SAVE_PATH = SAVE_PATH + chr + foldername
-				CreateFolder(Folder_SAVE_PATH)
+					foldername = rmunwrchr(folder.find("span",{"class":"instancename"}).text[:-7])
+					Folder_SAVE_PATH = SAVE_PATH + chr + foldername
+					CreateFolder(Folder_SAVE_PATH)
+					
+					withlink = folder.find_all("div",{"class":"activityinstance"})
 
-				withlink = folder.find_all("div",{"class":"activityinstance"})
+					flinks = withlink[0].find_all("a",href = True)
+					for flink in flinks:
+						if flink['href'].find("https://moodle.cpce-polyu.edu.hk/mod/folder/view.php?") == 0:
+							r = requests.get(url = flink['href'], cookies=cjdict, allow_redirects=True)
+							data = r.text
+							soup=bs4.BeautifulSoup(data, "html.parser")
+							withoutlink = soup.find_all("div",{"id":"folder_tree0"},{"class":"filemanager"})
 
-				flinks = withlink[0].find_all("a",href = True)
-				for flink in flinks:
-					if flink['href'].find("https://moodle.cpce-polyu.edu.hk/mod/folder/view.php?") == 0:
-						r = requests.get(url = flink['href'], cookies=cjdict, allow_redirects=True)
-						data = r.text
-						soup=bs4.BeautifulSoup(data, "html.parser")
-						withoutlink = soup.find_all("div",{"id":"folder_tree0"},{"class":"filemanager"})
+							links = withoutlink[0].find_all("a",href = True)
+							for link in links:
+								if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
+									getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
+									
 
-						links = withoutlink[0].find_all("a",href = True)
-						for link in links:
-							if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
-								getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
 	print()
 	print("Finished")
 	print("Input q to exit or else continue")
