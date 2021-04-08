@@ -22,7 +22,7 @@ Developing.
 4.Execute run.bat.<br>
 5.Select the subject you want.<br>
 6.Wait till finished!<br>
-(If you have any install problem, you can post on Issues with <s>Error Message<s>.<br>
+(If you have any install problem, you can post on Issues with <b>Error Message</b>.<br>
 
 ## Further Inquiries
 For any issues, please feel free to leave a comment on Github Issues. 
