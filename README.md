@@ -14,16 +14,14 @@ Developing.
 * requests
 * browser_cookie3
 * bs4
-* os
-* base64
-* SSL
 
 ## How to use this bot
 1.Download all the files.<br>
-2.Replace your username and password inside secret.py.<br>
-3.Execute run.bat.<br>
-4.Select the subject you want.<br>
-5.Wait till finished!<br>
+2.Install Module(s) by Module Require list
+3.Replace your username and password inside secret.py.<br>
+4.Execute run.bat.<br>
+5.Select the subject you want.<br>
+6.Wait till finished!<br>
 
 ## Further Inquiries
 For any issues, please feel free to leave a comment on Github Issues. 
