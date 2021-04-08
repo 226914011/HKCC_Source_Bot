@@ -16,6 +16,7 @@ Developing.
 * bs4
 * os
 * base64
+* SSL
 
 ## How to use this bot
 1.Download all the files.<br>
