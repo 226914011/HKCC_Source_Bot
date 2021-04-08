@@ -17,7 +17,7 @@ Developing.
 
 ## How to use this bot
 1.Download all the files.<br>
-2.Install Module(s) by Module Require list
+2.Install Module(s) by Module Require list.<br>
 3.Replace your username and password inside secret.py.<br>
 4.Execute run.bat.<br>
 5.Select the subject you want.<br>
