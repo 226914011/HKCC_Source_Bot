@@ -1,5 +1,5 @@
 import requests #import lib
-from secret import username, password #import username and password
+from secrets import username, password #import username and password
 
 #Preconfig
 headers = {
@@ -13,21 +13,14 @@ headers = {
 url ='https://moodle.cpce-polyu.edu.hk/calendar/view.php?view=day'
 session = requests.Session()
 
-
-#load MOODLEID1_cpcemoodle3 in local
-import browser_cookie3
-cj = browser_cookie3.load(domain_name='moodle.cpce-polyu.edu.hk')
-MOODLEID1_cpcemoodle3 = {c.name:c.value for c in cj}
-
 #get MoodleSessioncpcemoodle3
-response = session.get(url=url,headers = headers, cookies = MOODLEID1_cpcemoodle3,allow_redirects=False)
+response = session.get(url=url,headers = headers, allow_redirects=False)
 print(response.status_code)
+
+#get with MoodleSessioncpcemoodle3
 MoodleSessioncpcemoodle3 = response.cookies.get_dict()
 
-#merge MOODLEID1_cpcemoodle3 with MoodleSessioncpcemoodle3
-cookie = {**MOODLEID1_cpcemoodle3, **MoodleSessioncpcemoodle3}
-
-response = session.get(url='https://moodle.cpce-polyu.edu.hk/auth/saml/index.php',headers = headers, cookies = cookie,allow_redirects=False)
+response = session.get(url='https://moodle.cpce-polyu.edu.hk/auth/saml/index.php',headers = headers, cookies = MoodleSessioncpcemoodle3,allow_redirects=False)
 print(response.status_code)
 PHPSESSID = response.cookies.get_dict()
 data= response.text
@@ -36,8 +29,8 @@ import bs4
 soup=bs4.BeautifulSoup(data, "html.parser")
 href=soup.find(id="redirlink")
 
-ncookie = {**MOODLEID1_cpcemoodle3, **MoodleSessioncpcemoodle3, **PHPSESSID}
-response = session.get(url = href.get('href'),headers = headers,cookies =ncookie,allow_redirects=False)
+ncookie = {**MoodleSessioncpcemoodle3, **PHPSESSID}
+response = session.get(url = href.get('href'),headers = headers,cookies = ncookie,allow_redirects=False)
 data=response.text
 
 soup=bs4.BeautifulSoup(data, "html.parser")
@@ -56,7 +49,6 @@ data = {
 	"__LASTFOCUS": LASTFOCUS.get('value'),
 	"__VIEWSTATE": VIEWSTATE.get('value'),
 	"__VIEWSTATEGENERATOR": VIEWSTATEGENERATOR.get('value'),
-	"__EVENTTARGET": EVENTTARGET.get('value'),
 	"__EVENTTARGET": EVENTTARGET.get('value'),
 	"__EVENTVALIDATION": EVENTVALIDATION.get('value'),
 	"__db": "15",
