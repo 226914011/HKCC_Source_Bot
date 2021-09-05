@@ -1,4 +1,4 @@
-import requests #import lib
+import requests, bs4, os, sys #import lib
 from secrets import username, password #import username and password
 
 #Preconfig
@@ -25,7 +25,6 @@ print(response.status_code)
 PHPSESSID = response.cookies.get_dict()
 data= response.text
 
-import bs4
 soup=bs4.BeautifulSoup(data, "html.parser")
 href=soup.find(id="redirlink")
 
@@ -119,9 +118,6 @@ if subcategories == None:
 ############################################################################################################################################################
 #Get resource
 
-import os
-import base64
-
 def dec(x):
 	return bytes(bytes.fromhex(x)).decode('utf-8')
 
@@ -178,7 +174,7 @@ def CreateFolder(SAVE_PATH):
 
 
 while(True):
-	urls = []
+	urlss = []
 	hrefs = []
 
 	i = 1
@@ -189,88 +185,100 @@ while(True):
 		hrefs = s.find_all("a",{"class":""}, href=True)
 		url = []
 		for href in hrefs:
-			#print(href)
 			if href['href'].find("https://moodle.cpce-polyu.edu.hk/course/view.php?") == -1:
 				continue
 			else:
 				url.append(href['href'])
-				#print(url)
-		urls.append(url)
-		#print(urls[i-1])
-		#print()
+		urlss.append(url)
 
 	print()
 	print('Enter the number of data you want:')
 	x = int(input())
 
 	if x != 0:
-		urls = urls[x-1]
+		urlss = [urlss[x-1]]
 
-	for url in urls:
-		result7 = requests.post(url= url, cookies=cjdict,allow_redirects=True)
-		data = result7.text
-		soup=bs4.BeautifulSoup(data, "html.parser")
-		print(result7.status_code,result7.url)
-		print()
+	for urls in urlss:
+		for url in urls:
+			print(url)
+			result7 = requests.post(url= url, cookies=cjdict,allow_redirects=True)
+			data = result7.text
+			soup=bs4.BeautifulSoup(data, "html.parser")
+			print(result7.status_code,result7.url)
+			print()
 
-		cfolder = str(soup.title).split(":")[1][:-8]
-		SAVE_PATH = os.getcwd() + chr + "file" + chr + cfolder
-		CreateFolder(SAVE_PATH)
+			cfolder = str(soup.title).split(":")[1][:-8]
+			SAVE_PATH = os.getcwd() + chr + "file" + chr + cfolder
+			CreateFolder(SAVE_PATH)
 
-		#two format of resources
-		#capture viedos in urls are not done
-		files = soup.find_all("li",{"class":"activity resource modtype_resource"})
-		folders = soup.find_all("li",{"class":"activity folder modtype_folder"})
+			#two format of resources
+			#capture viedos in urls are not done
+			files = soup.find_all("li",{"class":"activity resource modtype_resource"})
+			folders = soup.find_all("li",{"class":"activity folder modtype_folder"})
 
-		if not len(files) and not len(folders): 
-			print("Folder is empty")
-			os.rmdir(SAVE_PATH)
+			if not len(files) and not len(folders): 
+				print("Folder is empty")
+				os.rmdir(SAVE_PATH)
 
-	#Download Files
-		for file in files:
-			links = file.find_all("a",href = True)
-			for link in links:
-				if link['href'].find("https://moodle.cpce-polyu.edu.hk/mod/resource/view.php?id=") == 0:
-					#debug usage
-					#print(link)
-					mp4 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/mpeg-24"})
-					img1 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/png-24"})
-					img2 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/jpeg-24"})
-					if mp4:
-						#mp4 file 
-						print(mp4)
-						print("Mp4 file,pass")
-						print()
-					elif img1 or img2:
-						#img file
-						print(img1,img2)
-						print("Img file,pass")
-						print()
-					else:	
-						try:
-							getFiles(link,cjdict,"instancename",SAVE_PATH)
-						except:
-							print("An exception occurred")
-							print()
-	
-	#Download Folder no needs to open link
-		for folder in folders:
-			withoutlink = folder.find_all("div",{"class":"contentwithoutlink"})
-			if withoutlink:
-				#debug usage
-				#print(withoutlink[0])
-				#print()
-				foldername = rmunwrchr(withoutlink[0].find("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/folder-24"}).get('title'))
-				Folder_SAVE_PATH = SAVE_PATH + chr + foldername
-				CreateFolder(Folder_SAVE_PATH)
-
-				links = withoutlink[0].find_all("a",href = True)
+			#Download Files
+			for file in files:
+				links = file.find_all("a",href = True)
 				for link in links:
-					if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
-							getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
+					if link['href'].find("https://moodle.cpce-polyu.edu.hk/mod/resource/view.php?id=") == 0:
+						#debug usage
+						#print(link)
+						mp4 = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/mpeg-24"})
 
-	#Download Folder needs open link
-			else:
+						png = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/png-24"})
+
+						jpeg = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/jpeg-24"}) + link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1625564560/f/jpeg-24"})
+
+						html = link.find_all("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1625564560/f/html-24"})
+						
+						if mp4:
+							#mp4 file 
+							print(mp4)
+							print("Mp4 file,pass")
+							print()
+						elif png or jpeg:
+							#img file
+							print(png,jpeg)
+							print("Img file,pass")
+							print()
+						elif html:
+							#html
+							continue
+							print(link)
+							print(link.rsplit("\'"))
+							print(link.rsplit("\'")[1])
+							getFiles(link.rsplit("\'")[1],cjdict,"instancename",SAVE_PATH)
+						else:	
+							try:
+								print(link)
+								getFiles(link,cjdict,"instancename",SAVE_PATH)
+							except:
+								print("Unexpected error:", sys.exc_info()[0])
+								print(link,SAVE_PATH)
+								print()
+
+			#Download Folder no needs to open link
+			for folder in folders:
+				withoutlink = folder.find_all("div",{"class":"contentwithoutlink"})
+				if withoutlink:
+					#debug usage
+					#print(withoutlink[0])
+					#print()
+					foldername = rmunwrchr(withoutlink[0].find("img",{"src":"https://moodle.cpce-polyu.edu.hk/theme/image.php/boost/core/1613055348/f/folder-24"}).get('title'))
+					Folder_SAVE_PATH = SAVE_PATH + chr + foldername
+					CreateFolder(Folder_SAVE_PATH)
+
+					links = withoutlink[0].find_all("a",href = True)
+					for link in links:
+						if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
+								getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
+
+			#Download Folder needs open link
+				else:
 					foldername = rmunwrchr(folder.find("span",{"class":"instancename"}).text[:-7])
 					Folder_SAVE_PATH = SAVE_PATH + chr + foldername
 					CreateFolder(Folder_SAVE_PATH)
