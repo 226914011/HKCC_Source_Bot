@@ -7,7 +7,7 @@
 A HKCC Source Bot Create By [26914011(Nori_egg)](https://github.com/226914011).<br>
 This Source Bot is mainly for HKCC student under CPCE to download files automatically,<s>basically becuz Im lazy</s>.<br>
 The bot will access CPCE Moodle by using user's account info in secret.py.<br>
-Still developing.<br>
+Still developing. (Not support for now: mp4, picture & html)<br>
 
 ## Things needed before install
 * Python
