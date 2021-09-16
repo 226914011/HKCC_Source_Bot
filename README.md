@@ -15,10 +15,11 @@ Still developing. (Not support for now: mp4, picture & html)<br>
 
 ## How to use this bot
 1.Download all the files.<br>
-2.Replace your username and password inside secret.py.<br>
-3.Execute run.bat.<br>
-4.Select the subject you want.<br>
-5.Wait till finished!<br>
+2.Unzip it at the place you want.<br>
+3.Replace your username and password inside secret.py.<br>
+4.Execute run.bat.<br>
+5.Select the subject you want.<br>
+6.Wait till finished!<br>
 (If you have any install problem, you can post on <b>Issues</b> with <b>Error Message</b>.<br>
 
 ## Further Inquiries
