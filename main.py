@@ -19,7 +19,7 @@ except ImportError:
 
 from secret import username, password #import username and password
 
-#User Ac defalt check
+#User Ac default check
 if username == "XXXXXXXXA" or password == "XXXXXXXXX":
 	print("Please replace your username and password first.")
 	exit(1)
