@@ -19,6 +19,11 @@ except ImportError:
 
 from secret import username, password #import username and password
 
+#User Ac defalt check
+if username == "XXXXXXXXA" or password == "XXXXXXXXX":
+	print("Please replace your username and password first.")
+	exit(1)
+
 #Preconfig
 headers = {
     'User-Agent': 'User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0',
@@ -61,7 +66,6 @@ EVENTVALIDATION = soup.find(id="__EVENTVALIDATION")
 SAMLRequest =  soup.find(id="aspnetForm")
 SAMLRequest.get('value')
 
-
 data = {
 	"__LASTFOCUS": LASTFOCUS.get('value'),
 	"__VIEWSTATE": VIEWSTATE.get('value'),
@@ -91,6 +95,12 @@ data= result2.text
 soup=bs4.BeautifulSoup(data, "html.parser")
 SAMLResponse = soup.find("input",{"name":"SAMLResponse"})
 RelayState = soup.find("input",{"name":"RelayState"})
+
+#User Ac Validation Check
+if SAMLResponse is None:
+	print("Username or password invalid,please try agin.")
+	print()
+	exit(1)
 
 data = {
 	"SAMLResponse": SAMLResponse.get('value'),
