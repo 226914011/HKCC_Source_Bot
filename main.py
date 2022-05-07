@@ -1,5 +1,4 @@
-import os, sys #import lib
-from time import sleep #import function
+import os, sys, threading, time #import lib
 
 try:
 	import requests #import lib
@@ -28,7 +27,6 @@ if username == "XXXXXXXXA" or password == "XXXXXXXXX":
 headers = {
     'User-Agent': 'User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0',
 }
-
 
 ############################################################################################################################################################
 #Login
@@ -107,17 +105,17 @@ data = {
 	"RelayState": RelayState.get('value'),
 }
 
-result3 = requests.post(url= 'https://moodle.cpce-polyu.edu.hk/simplesaml/module.php/saml/sp/saml2-acs.php/moodlesso', cookies=ncookie,data = data,allow_redirects=False)
+result3 = session.post(url= 'https://moodle.cpce-polyu.edu.hk/simplesaml/module.php/saml/sp/saml2-acs.php/moodlesso', cookies=ncookie,data = data,allow_redirects=False)
 print(result3.status_code)
 
 #merge required cookies
 cookie = {**ncookie, **result3.cookies.get_dict()}
-result4 = requests.post(url= 'https://moodle.cpce-polyu.edu.hk/auth/saml/index.php', cookies=cookie,allow_redirects=False)
+result4 = session.post(url= 'https://moodle.cpce-polyu.edu.hk/auth/saml/index.php', cookies=cookie,allow_redirects=False)
 print(result4.status_code)
 
 cjdict = result4.cookies.get_dict()
 
-result5 = requests.post(url= 'https://moodle.cpce-polyu.edu.hk', cookies=cjdict)
+result5 = session.post(url= 'https://moodle.cpce-polyu.edu.hk', cookies=cjdict)
 print(result5.status_code)
 if result5.status_code == 200:
 	print("Login successful!")
@@ -130,7 +128,7 @@ else:
 ############################################################################################################################################################
 #Select resource url
 
-result6 = requests.post(url= 'https://moodle.cpce-polyu.edu.hk', cookies=cjdict)
+result6 = session.post(url= 'https://moodle.cpce-polyu.edu.hk', cookies=cjdict)
 
 print(result6.status_code)
 
@@ -174,8 +172,13 @@ def getFiles(link,cjdict,classname,SAVE_PATH):
 		data = r.text
 		soup=bs4.BeautifulSoup(data, "html.parser")
 		rlinks = soup.find("div",{"class":"resourceworkaround"})
-		rlink = rlinks.find("a",href = True, onclick = True)
-		r = requests.get(url = rlink['href'], cookies=cjdict, allow_redirects=True)
+		try:
+			rlink = rlinks.find("a",href = True, onclick = True)
+		except:
+			print("Unexpected error:", sys.exc_info())
+			#some bug here waiting to be fix
+			return
+		r = session.get(url = rlink['href'], cookies=cjdict, allow_redirects=True, timeout=None)
 	
 	if r.headers.get('content-type') is not None:
 		#class for filename
@@ -212,6 +215,7 @@ def CreateFolder(SAVE_PATH):
 while(True):
 	urlss = []
 	hrefs = []
+	thread_lists = []
 
 	i = 1
 	print("0 . Select All")
@@ -234,15 +238,18 @@ while(True):
 	if x != 0:
 		urlss = [urlss[x-1]]
 
+#start download the files with multi-thread
+	#time counting
+	start = time.time()
 	for urls in urlss:
 		for url in urls:
-			result7 = requests.post(url= url, cookies=cjdict,allow_redirects=True)
+			result7 = session.post(url= url, cookies=cjdict,allow_redirects=True)
 			data = result7.text
 			soup=bs4.BeautifulSoup(data, "html.parser")
 			print(result7.status_code,result7.url)
 			print()
 
-			cfolder = str(soup.title).split(":")[1][:-8]
+			cfolder = rmunwrchr(str(soup.title).split(":")[1][:-8])
 			SAVE_PATH = os.getcwd() + chr + "file" + chr + cfolder
 			CreateFolder(SAVE_PATH)
 
@@ -253,7 +260,7 @@ while(True):
 
 			if not len(files) and not len(folders):
 				print("Folder is empty")
-				sleep(0.5) #delay 0.5s
+				time.sleep(0.5) #delay 0.5s
 				os.rmdir(SAVE_PATH)
 
 			#Download Files
@@ -286,7 +293,10 @@ while(True):
 							print()
 						else:	
 							try:
-								getFiles(link,cjdict,"instancename",SAVE_PATH)
+								thread = threading.Thread(target=getFiles, args=(link,cjdict,"instancename",SAVE_PATH))
+								thread.setDaemon(True)
+								thread.start()
+								thread_lists.append(thread)
 							except:
 								print("Unexpected error:", sys.exc_info())
 								print(link,SAVE_PATH)
@@ -303,7 +313,10 @@ while(True):
 					links = withoutlink[0].find_all("a",href = True)
 					for link in links:
 						if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
-								getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
+								thread = threading.Thread(target=getFiles, args=(link,cjdict,"fp-filename",Folder_SAVE_PATH))
+								thread.setDaemon(True)
+								thread.start()
+								thread_lists.append(thread)
 
 			#Download Folder needs open link
 				else:
@@ -324,11 +337,17 @@ while(True):
 							links = withoutlink[0].find_all("a",href = True)
 							for link in links:
 								if link['href'].find("https://moodle.cpce-polyu.edu.hk/pluginfile.php/") == 0:
-									getFiles(link,cjdict,"fp-filename",Folder_SAVE_PATH)
-									
+									thread = threading.Thread(target=getFiles, args=(link,cjdict,"fp-filename",Folder_SAVE_PATH))
+									thread.setDaemon(True)
+									thread.start()
+									thread_lists.append(thread)
 
+	for thread in thread_lists:
+		thread.join()
+
+	stop = time.time()
 	print()
-	print("Finished")
+	print(f"Finished with time: {stop - start}")
 	print("Input q to exit or else continue")
 	x = input()
 	if x == "q":
