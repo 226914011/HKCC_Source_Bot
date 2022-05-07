@@ -165,7 +165,7 @@ def rmunwrchr(stringfile):
 
 #get file in filtered link
 def getFiles(link,cjdict,classname,SAVE_PATH):
-	r = requests.get(url = link['href'], cookies=cjdict, allow_redirects=True)
+	r = session.get(url = link['href'], cookies=cjdict, allow_redirects=True, timeout=None)
 
 	#resolve pop up resource
 	if r.url.find("https://moodle.cpce-polyu.edu.hk/mod/resource/view.php?id=") == 0:
@@ -329,7 +329,7 @@ while(True):
 					flinks = withlink[0].find_all("a",href = True)
 					for flink in flinks:
 						if flink['href'].find("https://moodle.cpce-polyu.edu.hk/mod/folder/view.php?") == 0:
-							r = requests.get(url = flink['href'], cookies=cjdict, allow_redirects=True)
+							r = session.get(url = flink['href'], cookies=cjdict, allow_redirects=True)
 							data = r.text
 							soup=bs4.BeautifulSoup(data, "html.parser")
 							withoutlink = soup.find_all("div",{"id":"folder_tree0"},{"class":"filemanager"})
